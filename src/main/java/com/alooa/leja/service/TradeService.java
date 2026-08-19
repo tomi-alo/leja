@@ -1,11 +1,19 @@
 package com.alooa.leja.service;
 
-import com.alooa.leja.repository.TradeRepository;
+import com.alooa.leja.dto.CreateTradeRequest;
+import com.alooa.leja.dto.TradeResponse;
+import com.alooa.leja.dto.UpdateTradeRequest;
 
-public class TradeService {
-    private TradeRepository tradeRepository;
+import java.util.List;
 
-    public TradeService(TradeRepository tradeRepository) {
-        this.tradeRepository = tradeRepository;
-    }
+public interface TradeService {
+    TradeResponse createTrade(CreateTradeRequest request);
+
+    TradeResponse updateTrade(Long id, UpdateTradeRequest request);
+
+    List<TradeResponse> getAllTrades();
+
+    TradeResponse getTradeById(Long id);
+
+    void deleteTrade(Long id);
 }

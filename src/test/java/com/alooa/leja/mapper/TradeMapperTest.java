@@ -35,7 +35,7 @@ class TradeMapperTest {
         assertEquals(Session.ASIA, trade.getSession());
         assertEquals(2.0, trade.getPositionSize());
         assertEquals(40.0, trade.getPnl());
-        assertEquals(null, trade.getReason());
+        assertNull(trade.getReason());
     }
 
     @Test

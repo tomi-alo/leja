@@ -85,4 +85,27 @@ public class Trade {
         this.reason = reason;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public void setPositionSize(Double positionSize) {
+        this.positionSize = positionSize;
+    }
+
+    public void setPnl(Double pnl) {
+        this.pnl = pnl;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
 }
