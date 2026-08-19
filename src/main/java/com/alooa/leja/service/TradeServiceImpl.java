@@ -6,9 +6,11 @@ import com.alooa.leja.dto.UpdateTradeRequest;
 import com.alooa.leja.mapper.TradeMapper;
 import com.alooa.leja.model.Trade;
 import com.alooa.leja.repository.TradeRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class TradeServiceImpl implements TradeService {
 
     private final TradeRepository tradeRepository;
