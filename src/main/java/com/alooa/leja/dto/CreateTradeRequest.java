@@ -13,7 +13,7 @@ public record CreateTradeRequest(
         @NotNull(message = "Direction is required")
         Direction direction,
 
-        @NotNull(message = "Direction is required")
+        @NotNull(message = "Session is required")
         Session session,
 
         @NotNull(message = "Position size is required")
