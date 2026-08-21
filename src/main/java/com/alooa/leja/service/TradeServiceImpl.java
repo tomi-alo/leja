@@ -3,6 +3,7 @@ package com.alooa.leja.service;
 import com.alooa.leja.dto.CreateTradeRequest;
 import com.alooa.leja.dto.TradeResponse;
 import com.alooa.leja.dto.UpdateTradeRequest;
+import com.alooa.leja.exception.TradeNotFoundException;
 import com.alooa.leja.mapper.TradeMapper;
 import com.alooa.leja.model.Trade;
 import com.alooa.leja.repository.TradeRepository;
@@ -31,7 +32,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public TradeResponse updateTrade(Long id, UpdateTradeRequest request) {
         Trade trade = tradeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Trade not found with id " + id));
+                .orElseThrow(() -> new TradeNotFoundException(id));
 
         trade.setSymbol(request.symbol() != null && !request.symbol().isBlank() ? request.symbol() : trade.getSymbol());
         trade.setDirection(request.direction() != null ? request.direction() : trade.getDirection());
@@ -55,17 +56,14 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public TradeResponse getTradeById(Long id) {
         Trade trade = tradeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Trade not found with id " + id));
+                .orElseThrow(() -> new TradeNotFoundException(id));
         return tradeMapper.toResponse(trade);
     }
 
     @Override
     public void deleteTrade(Long id) {
-        if(tradeRepository.existsById(id)) {
-            tradeRepository.deleteById(id);
-        }
-        else{
-            throw new RuntimeException("Trade not found with id " + id);
-        }
+        Trade trade = tradeRepository.findById(id)
+                .orElseThrow(() -> new TradeNotFoundException(id));
+        tradeRepository.delete(trade);
     }
 }
