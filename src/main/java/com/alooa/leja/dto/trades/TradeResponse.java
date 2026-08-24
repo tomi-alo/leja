@@ -1,7 +1,7 @@
-package com.alooa.leja.dto;
+package com.alooa.leja.dto.trades;
 
-import com.alooa.leja.model.Direction;
-import com.alooa.leja.model.Session;
+import com.alooa.leja.model.trades.Direction;
+import com.alooa.leja.model.trades.Session;
 
 public record TradeResponse(
         Long id,

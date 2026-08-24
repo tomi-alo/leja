@@ -1,4 +1,4 @@
-package com.alooa.leja.model;
+package com.alooa.leja.model.trades;
 
 public enum Session {
     NY,

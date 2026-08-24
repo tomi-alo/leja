@@ -1,5 +1,6 @@
-package com.alooa.leja.model;
+package com.alooa.leja.model.trades;
 
+import com.alooa.leja.model.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,10 @@ public class Trade {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // id automatically starts at 1 and auto increments per trade
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @NotBlank(message = "Symbol is required")
     private String symbol;

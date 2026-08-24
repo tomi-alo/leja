@@ -1,8 +1,8 @@
 package com.alooa.leja.service;
 
-import com.alooa.leja.dto.CreateTradeRequest;
-import com.alooa.leja.dto.TradeResponse;
-import com.alooa.leja.dto.UpdateTradeRequest;
+import com.alooa.leja.dto.trades.CreateTradeRequest;
+import com.alooa.leja.dto.trades.TradeResponse;
+import com.alooa.leja.dto.trades.UpdateTradeRequest;
 
 import java.util.List;
 

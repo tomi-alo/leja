@@ -1,4 +1,7 @@
 package com.alooa.leja.model;
+import com.alooa.leja.model.trades.Direction;
+import com.alooa.leja.model.trades.Session;
+import com.alooa.leja.model.trades.Trade;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

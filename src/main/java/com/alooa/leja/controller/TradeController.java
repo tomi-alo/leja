@@ -1,8 +1,8 @@
 package com.alooa.leja.controller;
 
-import com.alooa.leja.dto.CreateTradeRequest;
-import com.alooa.leja.dto.TradeResponse;
-import com.alooa.leja.dto.UpdateTradeRequest;
+import com.alooa.leja.dto.trades.CreateTradeRequest;
+import com.alooa.leja.dto.trades.TradeResponse;
+import com.alooa.leja.dto.trades.UpdateTradeRequest;
 import com.alooa.leja.service.TradeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -39,13 +39,13 @@ public class TradeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<TradeResponse> updateTrade(@PathVariable Long id, @Valid @RequestBody UpdateTradeRequest request) {
         TradeResponse response = tradeService.updateTrade(id, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTrade(@PathVariable Long id) {
         tradeService.deleteTrade(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

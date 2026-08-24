@@ -1,11 +1,11 @@
 package com.alooa.leja.service;
 
-import com.alooa.leja.dto.CreateTradeRequest;
-import com.alooa.leja.dto.TradeResponse;
+import com.alooa.leja.dto.trades.CreateTradeRequest;
+import com.alooa.leja.dto.trades.TradeResponse;
 import com.alooa.leja.mapper.TradeMapper;
-import com.alooa.leja.model.Direction;
-import com.alooa.leja.model.Session;
-import com.alooa.leja.model.Trade;
+import com.alooa.leja.model.trades.Direction;
+import com.alooa.leja.model.trades.Session;
+import com.alooa.leja.model.trades.Trade;
 import com.alooa.leja.repository.TradeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
