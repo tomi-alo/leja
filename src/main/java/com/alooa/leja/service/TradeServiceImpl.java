@@ -5,6 +5,8 @@ import com.alooa.leja.dto.TradeResponse;
 import com.alooa.leja.dto.UpdateTradeRequest;
 import com.alooa.leja.exception.TradeNotFoundException;
 import com.alooa.leja.mapper.TradeMapper;
+import com.alooa.leja.model.Direction;
+import com.alooa.leja.model.Session;
 import com.alooa.leja.model.Trade;
 import com.alooa.leja.repository.TradeRepository;
 import org.springframework.stereotype.Service;
@@ -34,12 +36,29 @@ public class TradeServiceImpl implements TradeService {
         Trade trade = tradeRepository.findById(id)
                 .orElseThrow(() -> new TradeNotFoundException(id));
 
-        trade.setSymbol(request.symbol() != null && !request.symbol().isBlank() ? request.symbol() : trade.getSymbol());
-        trade.setDirection(request.direction() != null ? request.direction() : trade.getDirection());
-        trade.setSession(request.session() != null ? request.session() : trade.getSession());
-        trade.setPositionSize(request.positionSize() != null ? request.positionSize() : trade.getPositionSize());
-        trade.setPnl(request.pnl() != null ? request.pnl() : trade.getPnl());
-        trade.setReason(request.reason() != null && !request.reason().isBlank() ? request.reason() : trade.getReason());
+        if (request.symbol() != null && !request.symbol().isBlank()) {
+            trade.setSymbol(request.symbol());
+        }
+
+        if (request.direction() != null && !request.direction().isBlank()) {
+            trade.setDirection(Direction.valueOf(request.direction().trim().toUpperCase()));
+        }
+
+        if (request.session() != null && !request.session().isBlank()) {
+            trade.setSession(Session.valueOf(request.session().trim().toUpperCase()));
+        }
+
+        if (request.positionSize() != null && !request.positionSize().isBlank()) {
+            trade.setPositionSize(Double.parseDouble(request.positionSize().trim()));
+        }
+
+        if (request.pnl() != null && !request.pnl().isBlank()) {
+            trade.setPnl(Double.parseDouble(request.pnl().trim()));
+        }
+
+        if (request.reason() != null && !request.reason().isBlank()) {
+            trade.setReason(request.reason());
+        }
 
         Trade updatedTrade = tradeRepository.save(trade);
         return tradeMapper.toResponse(updatedTrade);

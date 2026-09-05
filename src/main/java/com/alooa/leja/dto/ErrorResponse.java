@@ -1,10 +1,11 @@
 package com.alooa.leja.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ErrorResponse(
         int statusCode,
-        String message,
+        List<String> errors,
         LocalDateTime timestamp
 ) {
 }
