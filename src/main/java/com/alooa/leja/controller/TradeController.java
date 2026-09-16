@@ -39,13 +39,13 @@ public class TradeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<TradeResponse> updateTrade(@PathVariable Long id, @Valid @RequestBody UpdateTradeRequest request) {
         TradeResponse response = tradeService.updateTrade(id, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTrade(@PathVariable Long id) {
         tradeService.deleteTrade(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

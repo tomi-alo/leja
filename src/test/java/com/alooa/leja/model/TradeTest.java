@@ -17,6 +17,13 @@ class TradeTest {
     }
 
     @Test
+    void setSymbol_shouldSanitizeSymbol() {
+        Trade trade = new Trade("EURUSD", Direction.BUY, Session.NY, 1.0, 150.0, "liq sweep");
+        trade.setSymbol("  gbpusd ");
+        assertEquals("GBPUSD", trade.getSymbol());
+    }
+
+    @Test
     void constructor_shouldGetCorrectOutcome() {
         Trade trade = new Trade(
                 "eurusd    ",

@@ -37,12 +37,16 @@ public class Trade {
 
     public Trade(String symbol, Direction direction, Session session, Double positionSize,
                  Double pnl, String reason){
-        this.symbol = symbol != null ? symbol.trim().toUpperCase() : null;
+        this.symbol = sanitizeSymbol(symbol);
         this.direction = direction;
         this.positionSize = positionSize;
         this.session = session;
         this.reason = reason;
         this.pnl = pnl;
+    }
+
+    private static String sanitizeSymbol(String symbol) {
+        return symbol != null ? symbol.trim().toUpperCase() : null;
     }
 
     //getters
@@ -90,7 +94,7 @@ public class Trade {
     }
 
     public void setSymbol(String symbol) {
-        this.symbol = symbol;
+        this.symbol = sanitizeSymbol(symbol);
     }
 
     public void setDirection(Direction direction) {
