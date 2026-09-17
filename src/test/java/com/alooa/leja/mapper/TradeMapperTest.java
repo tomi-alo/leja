@@ -22,10 +22,10 @@ class TradeMapperTest {
     void toEntity_shouldMakeCorrectly(){
         CreateTradeRequest request = new CreateTradeRequest(
                 "eurusd",
-                Direction.SELL,
-                Session.ASIA,
-                2.0,
-                40.0,
+                "SELL",
+                "ASIA",
+                "2.0",
+                "40.0",
                 null
         );
         Trade trade = tradeMapper.toEntity(request);

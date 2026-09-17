@@ -38,7 +38,7 @@ class TradeServiceImplTest {
 
         // 1. Creating a fake request
         CreateTradeRequest request = new CreateTradeRequest(
-                "AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup"
+                "AAPL", "BUY", "NY", "1.0", "150.0", "Good setup"
         );
 
         // 2. Creating fake entity and response objects
