@@ -224,5 +224,22 @@ class TradeServiceImplTest {
         // --- THEN ---
         verify(tradeRepository, times(1)).delete(existingTrade);
     }
+
+    @Test
+    void deleteTrade_ShouldThrowException_WhenTradeNotFound() {
+        // --- GIVEN ---
+        Long tradeId = 1L;
+
+        // Stubbing to return empty Optional
+        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.empty());
+
+        // --- WHEN & THEN ---
+        assertThrows(TradeNotFoundException.class, () -> {
+            tradeService.deleteTrade(tradeId);
+        });
+
+        // Verifies that the repository's delete method was never called
+        verify(tradeRepository, never()).delete(any(Trade.class));
+    }
 }
 
