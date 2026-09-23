@@ -2,6 +2,8 @@ package com.alooa.leja.controller;
 
 import com.alooa.leja.dto.ErrorResponse;
 import com.alooa.leja.exception.TradeNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +18,9 @@ import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     // FOR TRADE NOT FOUND ERRORS
     @ExceptionHandler(TradeNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleTradeNotFoundException(TradeNotFoundException ex){
@@ -75,9 +80,10 @@ public class GlobalExceptionHandler {
     // FOR UNEXPECTED SERVER ERRORS
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex){
+        log.error("Unhandled error", ex);
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                List.of("An unexpected error occured: " + ex.getMessage()),
+                List.of("Unexpected error"),
                 Instant.now()
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
