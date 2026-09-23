@@ -11,6 +11,7 @@ import com.alooa.leja.model.Trade;
 import com.alooa.leja.repository.TradeRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -49,15 +50,35 @@ public class TradeServiceImpl implements TradeService {
         }
 
         if (request.positionSize() != null && !request.positionSize().isBlank()) {
-            trade.setPositionSize(Double.parseDouble(request.positionSize().trim()));
+            trade.setPositionSize(new BigDecimal(request.positionSize().trim()));
         }
 
-        if (request.pnl() != null && !request.pnl().isBlank()) {
-            trade.setPnl(Double.parseDouble(request.pnl().trim()));
+        if (request.contractSize() != null && !request.contractSize().isBlank()) {
+            trade.setContractSize(new BigDecimal(request.contractSize().trim()));
         }
 
         if (request.reason() != null && !request.reason().isBlank()) {
             trade.setReason(request.reason());
+        }
+
+        if (request.entryPrice() != null && !request.entryPrice().isBlank()) {
+            trade.setEntryPrice(new BigDecimal(request.entryPrice().trim()));
+        }
+
+        if (request.exitPrice() != null && !request.exitPrice().isBlank()) {
+            trade.setExitPrice(new BigDecimal(request.exitPrice().trim()));
+        }
+
+        if (request.stopLoss() != null && !request.stopLoss().isBlank()) {
+            trade.setStopLoss(new BigDecimal(request.stopLoss().trim()));
+        }
+
+        if (request.takeProfit() != null && !request.takeProfit().isBlank()) {
+            trade.setTakeProfit(new BigDecimal(request.takeProfit().trim()));
+        }
+
+        if (request.executedAt() != null) {
+            trade.setExecutedAt(request.executedAt());
         }
 
         Trade updatedTrade = tradeRepository.save(trade);

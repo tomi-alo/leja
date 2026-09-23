@@ -7,6 +7,8 @@ import com.alooa.leja.model.Session;
 import com.alooa.leja.model.Trade;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class TradeMapper {
 
@@ -19,12 +21,28 @@ public class TradeMapper {
                 ? Session.valueOf(request.session().trim().toUpperCase())
                 : null;
 
-        Double positionSize = request.positionSize() != null
-                ? Double.parseDouble(request.positionSize().trim())
+        BigDecimal positionSize = request.positionSize() != null
+                ? new BigDecimal(request.positionSize().trim())
                 : null;
 
-        Double pnl = request.pnl() != null
-                ? Double.parseDouble(request.pnl().trim())
+        BigDecimal contractSize = request.contractSize() != null
+                ? new BigDecimal(request.contractSize().trim())
+                : null;
+
+        BigDecimal entryPrice = request.entryPrice() != null
+                ? new BigDecimal(request.entryPrice().trim())
+                : null;
+
+        BigDecimal exitPrice = request.exitPrice() != null
+                ? new BigDecimal(request.exitPrice().trim())
+                : null;
+
+        BigDecimal stopLoss = request.stopLoss() != null
+                ? new BigDecimal(request.stopLoss().trim())
+                : null;
+
+        BigDecimal takeProfit = request.takeProfit() != null
+                ? new BigDecimal(request.takeProfit().trim())
                 : null;
 
         return new Trade(
@@ -32,8 +50,14 @@ public class TradeMapper {
                 direction,
                 session,
                 positionSize,
-                pnl,
-                request.reason());
+                contractSize,
+                entryPrice,
+                exitPrice,
+                stopLoss,
+                takeProfit,
+                request.reason(),
+                request.executedAt()
+        );
     }
 
     public TradeResponse toResponse(Trade trade){
@@ -43,9 +67,16 @@ public class TradeMapper {
                 trade.getDirection(),
                 trade.getSession(),
                 trade.getPositionSize(),
-                trade.getPnl(),
+                trade.getContractSize(),
+                trade.getEntryPrice(),
+                trade.getExitPrice(),
+                trade.getStopLoss(),
+                trade.getTakeProfit(),
+                trade.getPnL(),
+                trade.getRiskToRewardRatio(),
                 trade.getReason(),
-                trade.getOutcome()
+                trade.getOutcome(),
+                trade.getExecutedAt()
         );
     }
 }
