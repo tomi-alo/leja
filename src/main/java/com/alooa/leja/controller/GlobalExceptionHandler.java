@@ -1,6 +1,7 @@
 package com.alooa.leja.controller;
 
 import com.alooa.leja.dto.ErrorResponse;
+import com.alooa.leja.exception.InvalidTradeException;
 import com.alooa.leja.exception.TradeNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,17 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 List.of(detailMessage),
+                Instant.now()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    //FOR INVALID TRADE LOGIC ERRORS
+    @ExceptionHandler(InvalidTradeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidTrade(InvalidTradeException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getErrors(),
                 Instant.now()
         );
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
