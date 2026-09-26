@@ -58,8 +58,8 @@ public class TradeServiceImpl implements TradeService {
             trade.setContractSize(new BigDecimal(request.contractSize().trim()));
         }
 
-        if (request.reason() != null && !request.reason().isBlank()) {
-            trade.setReason(request.reason());
+        if (request.reason() != null) {
+            trade.setReason(request.reason().isBlank() ? null : request.reason().trim());
         }
 
         if (request.entryPrice() != null && !request.entryPrice().isBlank()) {

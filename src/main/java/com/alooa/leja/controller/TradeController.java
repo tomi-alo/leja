@@ -39,7 +39,7 @@ public class TradeController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<TradeResponse> updateTrade(@PathVariable Long id, @Valid @RequestBody UpdateTradeRequest request) {
         TradeResponse response = tradeService.updateTrade(id, request);
         return new ResponseEntity<>(response, HttpStatus.OK);
