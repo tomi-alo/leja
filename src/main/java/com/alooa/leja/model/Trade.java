@@ -141,7 +141,6 @@ public class Trade {
     }
 
     public String getOutcome() {
-        if (this.getPnL() == null) return "PENDING";
         if (this.getPnL().compareTo(BigDecimal.ZERO) > 0) return "WIN";
         if (this.getPnL().compareTo(BigDecimal.ZERO) < 0) return "LOSS";
         return "BREAK EVEN";
