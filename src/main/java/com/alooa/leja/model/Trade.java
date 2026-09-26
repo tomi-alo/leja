@@ -21,6 +21,7 @@ public class Trade {
     private Long id;
 
     @NotBlank(message = "Symbol is required")
+    @Column(length = 32)
     private String symbol;
 
     @Enumerated(EnumType.STRING)
@@ -59,6 +60,7 @@ public class Trade {
     @NotNull(message = "Session is required")
     private Session session;
 
+    @Column(length = 255)
     private String reason;
 
     private Instant executedAt = Instant.now();

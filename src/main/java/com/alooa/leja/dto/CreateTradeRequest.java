@@ -6,11 +6,13 @@ import com.alooa.leja.validation.ValueOfEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 
 public record CreateTradeRequest(
         @NotBlank(message = "Symbol is required")
+        @Size(max = 32, message = "Symbol must be at most 32 characters")
         String symbol,
 
         @NotNull(message = "Direction is required")
@@ -47,6 +49,7 @@ public record CreateTradeRequest(
         @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,8})?$", message = "Take profit must be a valid positive number")
         String takeProfit,
 
+        @Size(max = 255, message = "Reason must be at most 255 characters")
         String reason,
 
         Instant executedAt
