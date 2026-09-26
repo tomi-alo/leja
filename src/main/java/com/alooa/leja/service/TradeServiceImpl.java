@@ -28,6 +28,7 @@ public class TradeServiceImpl implements TradeService {
     @Override
     public TradeResponse createTrade(CreateTradeRequest request) {
         Trade trade = tradeMapper.toEntity(request);
+        trade.checkPriceLevels();
         Trade savedTrade = tradeRepository.save(trade);
         return tradeMapper.toResponse(savedTrade);
     }
@@ -57,8 +58,8 @@ public class TradeServiceImpl implements TradeService {
             trade.setContractSize(new BigDecimal(request.contractSize().trim()));
         }
 
-        if (request.reason() != null && !request.reason().isBlank()) {
-            trade.setReason(request.reason());
+        if (request.reason() != null) {
+            trade.setReason(request.reason().isBlank() ? null : request.reason().trim());
         }
 
         if (request.entryPrice() != null && !request.entryPrice().isBlank()) {
@@ -81,6 +82,7 @@ public class TradeServiceImpl implements TradeService {
             trade.setExecutedAt(request.executedAt());
         }
 
+        trade.checkPriceLevels();
         Trade updatedTrade = tradeRepository.save(trade);
         return tradeMapper.toResponse(updatedTrade);
     }

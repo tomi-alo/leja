@@ -1,5 +1,6 @@
 package com.alooa.leja.model;
 
+import com.alooa.leja.exception.InvalidTradeException;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,8 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "trades") // making this trade model map to "trades" table to be made in leja db
@@ -18,6 +21,7 @@ public class Trade {
     private Long id;
 
     @NotBlank(message = "Symbol is required")
+    @Column(length = 32)
     private String symbol;
 
     @Enumerated(EnumType.STRING)
@@ -56,6 +60,7 @@ public class Trade {
     @NotNull(message = "Session is required")
     private Session session;
 
+    @Column(length = 255)
     private String reason;
 
     private Instant executedAt = Instant.now();
@@ -116,8 +121,28 @@ public class Trade {
         return session;
     }
 
+    public void checkPriceLevels() {
+        List<String> errors = new ArrayList<>();
+        boolean buy = direction == Direction.BUY;
+
+        if (buy ? stopLoss.compareTo(entryPrice) >= 0 : stopLoss.compareTo(entryPrice) <= 0) {
+            errors.add(buy
+                    ? "Stop loss must be below the entry for a buy"
+                    : "Stop loss must be above the entry for a sell");
+        }
+
+        if (buy ? takeProfit.compareTo(entryPrice) <= 0 : takeProfit.compareTo(entryPrice) >= 0) {
+            errors.add(buy
+                    ? "Take profit must be above the entry for a buy"
+                    : "Take profit must be below the entry for a sell");
+        }
+
+        if (!errors.isEmpty()) {
+            throw new InvalidTradeException(errors);
+        }
+    }
+
     public String getOutcome() {
-        if (this.getPnL() == null) return "PENDING";
         if (this.getPnL().compareTo(BigDecimal.ZERO) > 0) return "WIN";
         if (this.getPnL().compareTo(BigDecimal.ZERO) < 0) return "LOSS";
         return "BREAK EVEN";
