@@ -3,6 +3,7 @@ package com.alooa.leja.service;
 import com.alooa.leja.dto.CreateTradeRequest;
 import com.alooa.leja.dto.TradeResponse;
 import com.alooa.leja.dto.UpdateTradeRequest;
+import com.alooa.leja.exception.InvalidTradeException;
 import com.alooa.leja.exception.TradeNotFoundException;
 import com.alooa.leja.mapper.TradeMapper;
 import com.alooa.leja.model.Direction;
@@ -16,10 +17,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.times;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,242 +33,158 @@ class TradeServiceImplTest {
 
     @Mock
     private TradeRepository tradeRepository;
-    @Mock
-    private TradeMapper tradeMapper;
 
     private TradeServiceImpl tradeService;
 
     @BeforeEach
     void setUp() {
-        tradeService = new TradeServiceImpl(tradeRepository, tradeMapper);
+        tradeService = new TradeServiceImpl(tradeRepository, new TradeMapper());
     }
 
     @Test
-    void createTrade_ShouldReturnTradeResponse() {
-        Long tradeId = 1L;
+    void createTrade_shouldSaveAValidTrade() {
+        when(tradeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreateTradeRequest request = new CreateTradeRequest(
-                "AAPL", "BUY", "NY", "1.0", "1", "100", "110", "90", "120", "Good setup", null
-        );
+        TradeResponse result = tradeService.createTrade(createRequest("90", "120"));
 
-        Trade fakeEntity = new Trade(
-                "AAPL",
-                Direction.BUY,
-                Session.NY,
-                new BigDecimal("1.0"),
-                new BigDecimal("1"),
-                new BigDecimal("100"),
-                new BigDecimal("110"),
-                new BigDecimal("90"),
-                new BigDecimal("120"),
-                "Good setup",
-                null
-        );
-        fakeEntity.setId(tradeId);
-
-        TradeResponse fakeResponse = new TradeResponse(
-                tradeId,
-                "AAPL",
-                Direction.BUY,
-                Session.NY,
-                new BigDecimal("1.0"),
-                new BigDecimal("1"),
-                new BigDecimal("100"),
-                new BigDecimal("110"),
-                new BigDecimal("90"),
-                new BigDecimal("120"),
-                new BigDecimal("10.00"),
-                new BigDecimal("2.00"),
-                "Good setup",
-                "WIN",
-                null
-        );
-
-        when(tradeMapper.toEntity(request)).thenReturn(fakeEntity);
-        when(tradeRepository.save(fakeEntity)).thenReturn(fakeEntity);
-        when(tradeMapper.toResponse(fakeEntity)).thenReturn(fakeResponse);
-
-        TradeResponse result = tradeService.createTrade(request);
-
-        assertNotNull(result);
-        assertEquals(1L, result.id());
-        assertEquals("AAPL", result.symbol());
-
-        verify(tradeRepository, times(1)).save(fakeEntity);
+        assertEquals("EURUSD", result.symbol());
+        assertEquals("WIN", result.outcome());
+        verify(tradeRepository).save(any());
     }
 
     @Test
-    void updateTrade_ShouldReturnUpdatedTradeResponse() {
-        // --- GIVEN ---
-        Long tradeId = 1L;
+    void createTrade_shouldRejectAStopOnTheWrongSide() {
+        assertThrows(InvalidTradeException.class, () -> tradeService.createTrade(createRequest("105", "120")));
 
-        // 1. Creating a fake request
-        UpdateTradeRequest request = new UpdateTradeRequest(
-                "AAPL", "SELL", "NY", "2.0", "200.0", "Updated reason"
-        );
-
-        // 2. Creating fake entity and response objects
-        Trade existingTrade = new Trade("AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup");
-        existingTrade.setId(tradeId);
-
-        Trade updatedTrade = new Trade("AAPL", Direction.SELL, Session.NY, 2.0, 200.0, "Updated reason");
-        updatedTrade.setId(tradeId);
-
-        TradeResponse updatedResponse = new TradeResponse(
-                tradeId, "AAPL", Direction.SELL, Session.NY, 2.0, 200.0, "Updated reason", "LOSS"
-        );
-
-        //3. Stubbing
-        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.of(existingTrade));
-        when(tradeRepository.save(existingTrade)).thenReturn(updatedTrade);
-        when(tradeMapper.toResponse(updatedTrade)).thenReturn(updatedResponse);
-
-        // --- WHEN ---
-        TradeResponse result = tradeService.updateTrade(tradeId, request);
-
-        // --- THEN ---
-        assertNotNull(result);
-        assertEquals(1L, result.id());
-        assertEquals("AAPL", result.symbol());
-        assertEquals(Direction.SELL, result.direction());
-        assertEquals(Session.NY, result.session());
-        assertEquals(2.0, result.positionSize());
-        assertEquals(200.0, result.pnl());
-        assertEquals("Updated reason", result.reason());
-
-        // Verifies that the repository's save method was called exactly 1 time
-        verify(tradeRepository, times(1)).save(existingTrade);
+        verify(tradeRepository, never()).save(any());
     }
 
     @Test
-    void updateTrade_ShouldThrowException_WhenTradeNotFound() {
-        // --- GIVEN ---
-        Long tradeId = 1L;
+    void updateTrade_shouldClearABlankReason() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.of(buy("90", "120")));
+        when(tradeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UpdateTradeRequest request = new UpdateTradeRequest(
-                "AAPL", "SELL", "NY", "2.0", "200.0", "Updated reason"
-        );
+        TradeResponse result = tradeService.updateTrade(1L, update(
+                null, null, null, null, null, null, null, null, null, ""));
 
-        // Stubbing to return empty Optional
-        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.empty());
-
-        // --- WHEN & THEN ---
-        assertThrows(TradeNotFoundException.class, () -> {
-            tradeService.updateTrade(tradeId, request);
-        });
-
-        // Verifies that the repository's save method was never called
-        verify(tradeRepository, never()).save(any(Trade.class));
+        assertNull(result.reason());
     }
 
     @Test
-    void getTradeById_ShouldReturnTradeResponse() {
-        // --- GIVEN ---
-        Long tradeId = 1L;
+    void updateTrade_shouldSanitizeSymbol() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.of(buy("90", "120")));
+        when(tradeRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Trade existingTrade = new Trade("AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup");
-        existingTrade.setId(tradeId);
+        TradeResponse result = tradeService.updateTrade(1L, update(
+                "  gbpusd ", null, null, null, null, null, null, null, null, null));
 
-        TradeResponse expectedResponse = new TradeResponse(
-                tradeId, "AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup", "WIN"
-        );
+        assertEquals("GBPUSD", result.symbol());
+    }
 
-        // Stubbing
-        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.of(existingTrade));
-        when(tradeMapper.toResponse(existingTrade)).thenReturn(expectedResponse);
+    @Test
+    void updateTrade_shouldRejectAStopOnTheWrongSideAndLeaveTheTradeUnsaved() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.of(buy("90", "120")));
 
-        // --- WHEN ---
-        TradeResponse result = tradeService.getTradeById(tradeId);
+        assertThrows(InvalidTradeException.class, () -> tradeService.updateTrade(1L, update(
+                null, null, null, null, null, null, null, "105", null, null)));
 
-        // --- THEN ---
-        assertNotNull(result);
-        assertEquals(1L, result.id());
-        assertEquals("AAPL", result.symbol());
-        assertEquals(Direction.BUY, result.direction());
-        assertEquals(Session.NY, result.session());
-        assertEquals(1.0, result.positionSize());
-        assertEquals(150.0, result.pnl());
-        assertEquals("Good setup", result.reason());
+        verify(tradeRepository, never()).save(any());
+    }
+
+    @Test
+    void updateTrade_shouldThrowWhenTradeIsMissing() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(TradeNotFoundException.class, () -> tradeService.updateTrade(1L, update(
+                null, null, null, null, null, null, null, null, null, "note")));
+
+        verify(tradeRepository, never()).save(any());
+    }
+
+    @Test
+    void getTradeById_shouldReturnTheTrade() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.of(buy("90", "120")));
+
+        TradeResponse result = tradeService.getTradeById(1L);
+
+        assertEquals("EURUSD", result.symbol());
         assertEquals("WIN", result.outcome());
     }
 
     @Test
-    void getTradeById_ShouldThrowException_WhenTradeNotFound() {
-        // --- GIVEN ---
-        Long tradeId = 1L;
+    void getTradeById_shouldThrowWhenTradeIsMissing() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Stubbing to return empty Optional
-        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.empty());
-
-        // --- WHEN & THEN ---
-        assertThrows(TradeNotFoundException.class, () -> {
-            tradeService.getTradeById(tradeId);
-        });
+        assertThrows(TradeNotFoundException.class, () -> tradeService.getTradeById(1L));
     }
 
     @Test
-    void getAllTrades_ShouldReturnListOfTradeResponses() {
-        // --- GIVEN ---
-        Trade trade1 = new Trade("AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup");
-        trade1.setId(1L);
-        Trade trade2 = new Trade("GOOGL", Direction.SELL, Session.LONDON, 2.0, 200.0, "Another setup");
-        trade2.setId(2L);
+    void getAllTrades_shouldReturnEveryTrade() {
+        when(tradeRepository.findAll()).thenReturn(List.of(buy("90", "120")));
 
-        TradeResponse response1 = new TradeResponse(
-                1L, "AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup", "WIN"
+        List<TradeResponse> result = tradeService.getAllTrades();
+
+        assertEquals(1, result.size());
+        assertEquals("EURUSD", result.get(0).symbol());
+    }
+
+    @Test
+    void deleteTrade_shouldDeleteTheTrade() {
+        Trade trade = buy("90", "120");
+        when(tradeRepository.findById(1L)).thenReturn(Optional.of(trade));
+
+        tradeService.deleteTrade(1L);
+
+        verify(tradeRepository).delete(trade);
+    }
+
+    @Test
+    void deleteTrade_shouldThrowWhenTradeIsMissing() {
+        when(tradeRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(TradeNotFoundException.class, () -> tradeService.deleteTrade(1L));
+
+        verify(tradeRepository, never()).delete(any());
+    }
+
+    private Trade buy(String stop, String target) {
+        Trade trade = new Trade(
+                "EURUSD",
+                Direction.BUY,
+                Session.NY,
+                new BigDecimal("1"),
+                new BigDecimal("1"),
+                new BigDecimal("100"),
+                new BigDecimal("110"),
+                new BigDecimal(stop),
+                new BigDecimal(target),
+                "liq sweep",
+                null
         );
-        TradeResponse response2 = new TradeResponse(
-                2L, "GOOGL", Direction.SELL, Session.LONDON, 2.0, 200.0, "Another setup", "LOSS"
+        trade.setId(1L);
+        return trade;
+    }
+
+    private CreateTradeRequest createRequest(String stop, String target) {
+        return new CreateTradeRequest(
+                "EURUSD", "BUY", "NY", "1", "1", "100", "110", stop, target, "liq sweep", null
         );
-
-        // Stubbing
-        when(tradeRepository.findAll()).thenReturn(java.util.List.of(trade1, trade2));
-        when(tradeMapper.toResponse(trade1)).thenReturn(response1);
-        when(tradeMapper.toResponse(trade2)).thenReturn(response2);
-
-        // --- WHEN ---
-        java.util.List<TradeResponse> result = tradeService.getAllTrades();
-
-        // --- THEN ---
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(response1, result.get(0));
-        assertEquals(response2, result.get(1));
     }
 
-    @Test
-    void deleteTrade_ShouldDeleteTrade() {
-        // --- GIVEN ---
-        Long tradeId = 1L;
-
-        Trade existingTrade = new Trade("AAPL", Direction.BUY, Session.NY, 1.0, 150.0, "Good setup");
-        existingTrade.setId(tradeId);
-
-        // Stubbing
-        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.of(existingTrade));
-
-        // --- WHEN ---
-        tradeService.deleteTrade(tradeId);
-
-        // --- THEN ---
-        verify(tradeRepository, times(1)).delete(existingTrade);
-    }
-
-    @Test
-    void deleteTrade_ShouldThrowException_WhenTradeNotFound() {
-        // --- GIVEN ---
-        Long tradeId = 1L;
-
-        // Stubbing to return empty Optional
-        when(tradeRepository.findById(tradeId)).thenReturn(java.util.Optional.empty());
-
-        // --- WHEN & THEN ---
-        assertThrows(TradeNotFoundException.class, () -> {
-            tradeService.deleteTrade(tradeId);
-        });
-
-        // Verifies that the repository's delete method was never called
-        verify(tradeRepository, never()).delete(any(Trade.class));
+    private UpdateTradeRequest update(
+            String symbol,
+            String direction,
+            String session,
+            String positionSize,
+            String contractSize,
+            String entryPrice,
+            String exitPrice,
+            String stopLoss,
+            String takeProfit,
+            String reason) {
+        return new UpdateTradeRequest(
+                symbol, direction, session, positionSize, contractSize,
+                entryPrice, exitPrice, stopLoss, takeProfit, reason, null
+        );
     }
 }
-
