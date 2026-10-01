@@ -7,7 +7,7 @@ leja is a RESTful trading journal API built with Spring Boot, PostgreSQL, and Do
 ## Key Features
 
 - CRUD operations for trades
-- Secure endpoints with HTTP Basic authentication
+- Public read access for trades, with HTTP Basic authentication on create, update, and delete
 - Layered architecture: controller, service, mapper, and repository
 - Price checks for stop loss and take profit
 - Dockerized application
@@ -17,11 +17,17 @@ leja is a RESTful trading journal API built with Spring Boot, PostgreSQL, and Do
 
 ## Accessing the Deployed API
 
-The deployed API is available at [https://leja-e0j6.onrender.com](https://leja-e0j6.onrender.com). Trade routes live under `/api/v1/trades`. The API is secured with Basic authentication. A username and password are required.
+The deployed API is available at [https://leja-e0j6.onrender.com](https://leja-e0j6.onrender.com). Trade routes live under `/api/v1/trades`.
+
+Anyone can list and read trades. Creating, updating, and deleting a trade requires Basic authentication.
 
 `GET /actuator/health` is public and does not require a password.
 
+Swagger UI is public at [https://leja-e0j6.onrender.com/swagger-ui/index.html](https://leja-e0j6.onrender.com/swagger-ui/index.html).
+
 ## Authentication Details
+
+Create, update, and delete use Basic authentication.
 
 - Username: `leja`
 - Password: the value of `LEJA_PASSWORD` set on the server
@@ -38,7 +44,7 @@ Do not commit that password. Set it in the environment where the app runs.
 | `PATCH` | `/api/v1/trades/{id}` | Updates the fields you send. Returns `200`. |
 | `DELETE` | `/api/v1/trades/{id}` | Deletes a trade. Returns `204`, or `404`. |
 
-`PUT /api/v1/trades/{id}` returns `405`. Updates use `PATCH`. A request with a missing or wrong password returns `401`.
+`PUT /api/v1/trades/{id}` returns `405`. Updates use `PATCH`. A create, update, or delete with a missing or wrong password returns `401`. Listing and reading trades does not require a password.
 
 `direction` is `BUY` or `SELL`. `session` is `NY`, `ASIA`, or `LONDON`. `symbol` is stored in uppercase and is at most 32 characters. `reason` is optional and at most 255 characters. Sending `"reason": ""` on a `PATCH` clears the note. `executedAt` is optional. If it is omitted, the server uses the current time.
 
@@ -64,7 +70,15 @@ Create a trade:
 Use Postman or curl. This lists every trade:
 
 ```bash
-curl -u leja:YOUR_PASSWORD https://leja-e0j6.onrender.com/api/v1/trades
+curl https://leja-e0j6.onrender.com/api/v1/trades
+```
+
+This creates a trade:
+
+```bash
+curl -u leja:YOUR_PASSWORD -X POST https://leja-e0j6.onrender.com/api/v1/trades \
+  -H "Content-Type: application/json" \
+  -d "{\"symbol\":\"eurusd\",\"direction\":\"BUY\",\"session\":\"NY\",\"positionSize\":\"1\",\"contractSize\":\"1\",\"entryPrice\":\"100\",\"exitPrice\":\"110\",\"stopLoss\":\"90\",\"takeProfit\":\"120\",\"reason\":\"liq sweep\"}"
 ```
 
 ## Getting Started
