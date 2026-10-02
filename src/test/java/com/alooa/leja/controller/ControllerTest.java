@@ -47,12 +47,23 @@ class TradeControllerTest {
     private TradeService tradeService;
 
     @Test
-    void trades_shouldRejectARequestWithoutAPassword() throws Exception {
+    void getAllTrades_shouldAllowARequestWithoutAPassword() throws Exception {
+        when(tradeService.getAllTrades()).thenReturn(List.of(sample()));
+
         mockMvc.perform(get("/api/v1/trades"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].symbol").value("EURUSD"));
+    }
+
+    @Test
+    void createTrade_shouldRejectARequestWithoutAPassword() throws Exception {
+        mockMvc.perform(post("/api/v1/trades")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validTradeJson()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errors[0]").value("Authentication required"));
 
-        verify(tradeService, never()).getAllTrades();
+        verify(tradeService, never()).createTrade(any());
     }
 
     @Test

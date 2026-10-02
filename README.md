@@ -1,50 +1,70 @@
-# leja
+# Leja
 
-## Project Overview
+**Leja** is a REST API for a trading journal. When a trade position is closed, Leja automatically calculates the Profit & Loss (PnL), risk-to-reward ratio, and outcome (`WIN`, `LOSS`, or `BREAK EVEN`).
 
-leja is a RESTful trading journal API built with Spring Boot, PostgreSQL, and Docker. A trade is a closed position. The server calculates PnL, risk-to-reward, and the outcome. The API is deployed on Render, with PostgreSQL hosted on Neon.
+---
 
-## Key Features
+## API & Endpoints
 
-- CRUD operations for trades
-- Secure endpoints with HTTP Basic authentication
-- Layered architecture: controller, service, mapper, and repository
-- Price checks for stop loss and take profit
-- Dockerized application
-- Tests for the controller, service, mapper, and trade model
-- PostgreSQL on Neon for the deployed database
-- CI workflow for automated testing and Docker image builds with GitHub Actions
+Explore and interact with the endpoints using either the live demo server or your own local instance:
 
-## Accessing the Deployed API
+- **Live Base URL:** `https://leja-e0j6.onrender.com`
+- **Local Base URL:** `http://localhost:8080`
+- **Interactive Documentation:** [Swagger UI (Live Demo)](https://leja-e0j6.onrender.com/swagger-ui/index.html)
 
-The deployed API is available at [https://leja-e0j6.onrender.com](https://leja-e0j6.onrender.com). Trade routes live under `/api/v1/trades`. The API is secured with Basic authentication. A username and password are required.
+### Endpoint Summary
 
-`GET /actuator/health` is public and does not require a password.
+All trade routes live under `/api/v1/trades`.
 
-## Authentication Details
+| Method | Endpoint | Live Server Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/trades` | **Available** | Retrieves all trades. |
+| `GET` | `/api/v1/trades/{id}` | **Available** | Retrieves a specific trade by ID (returns `404` if not found). |
+| `GET` | `/actuator/health` | **Available** | Returns application health status. |
+| `POST` | `/api/v1/trades` | **Protected** (401 on Live) | Creates a new trade (returns `201`). |
+| `PATCH` | `/api/v1/trades/{id}` | **Protected** (401 on Live) | Updates specified trade fields (returns `200`). |
+| `DELETE` | `/api/v1/trades/{id}` | **Protected** (401 on Live) | Deletes a trade (returns `204`, or `404` if not found). |
 
-- Username: `leja`
-- Password: the value of `LEJA_PASSWORD` set on the server
+> **Note:** `PUT /api/v1/trades/{id}` is not supported (`405 Method Not Allowed`). Use `PATCH` for updates.
 
-Do not commit that password. Set it in the environment where the app runs.
+---
 
-## Endpoints
+## Live Demo Access Restrictions
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `POST` | `/api/v1/trades` | Creates a trade. Returns `201`. |
-| `GET` | `/api/v1/trades` | Returns every trade. |
-| `GET` | `/api/v1/trades/{id}` | Returns one trade, or `404`. |
-| `PATCH` | `/api/v1/trades/{id}` | Updates the fields you send. Returns `200`. |
-| `DELETE` | `/api/v1/trades/{id}` | Deletes a trade. Returns `204`, or `404`. |
+On the **Live Demo**, public access is strictly **read-only**.
 
-`PUT /api/v1/trades/{id}` returns `405`. Updates use `PATCH`. A request with a missing or wrong password returns `401`.
+### What you can use on the Live Server:
 
-`direction` is `BUY` or `SELL`. `session` is `NY`, `ASIA`, or `LONDON`. `symbol` is stored in uppercase and is at most 32 characters. `reason` is optional and at most 255 characters. Sending `"reason": ""` on a `PATCH` clears the note. `executedAt` is optional. If it is omitted, the server uses the current time.
+- `GET /api/v1/trades` (List trades)
+- `GET /api/v1/trades/{id}` (Fetch individual trade)
+- `GET /actuator/health` (Health check)
+- **Swagger UI** (Browsing documentation)
 
-A buy is saved only when the stop is below the entry and the target is above it. A sell is the opposite. A wrong level returns `400`, and the message names the stop, the target, or both. The response includes `pnl`, `riskToRewardRatio`, and `outcome` (`WIN`, `LOSS`, or `BREAK EVEN`).
+### Why write actions (`POST`, `PATCH`, `DELETE`) are disabled on the Live Server:
 
-Create a trade:
+Write operations are secured with **HTTP Basic Authentication**. The required password is stored exclusively in the host environment variables (Render) to keep the live demonstration database clean, consistent, and protected from unauthorized modifications or spam.
+
+Executing a `POST`, `PATCH`, or `DELETE` request against the live server (via Swagger UI, cURL, or Postman) will intentionally return a `401 Unauthorized` status. To create, update, or delete trades, you can run your own local instance.
+
+---
+
+## Testing & Interacting with Postman
+
+You can easily interact with the API using tools like **Postman** or **cURL**.
+
+### Testing Local Write Operations (`POST`)
+
+1. Set the request method to **`POST`**.
+2. URL: `http://localhost:8080/api/v1/trades`
+3. Under the **Authorization** tab:
+   - **Type:** Basic Auth
+   - **Username:** `leja`
+   - **Password:** *(The value configured in your local `LEJA_PASSWORD` variable)*
+4. Under the **Headers** tab:
+   - **Key:** `Content-Type`, **Value:** `application/json`
+5. Under the **Body** tab, select **raw** and choose **JSON**.
+
+### Example Request Payload (`POST /api/v1/trades`)
 
 ```json
 {
@@ -61,104 +81,161 @@ Create a trade:
 }
 ```
 
-Use Postman or curl. This lists every trade:
+### Example Server Response (`201 Created`)
 
-```bash
-curl -u leja:YOUR_PASSWORD https://leja-e0j6.onrender.com/api/v1/trades
+```json
+{
+  "id": 1,
+  "symbol": "EURUSD",
+  "direction": "BUY",
+  "session": "NY",
+  "positionSize": 1,
+  "contractSize": 1,
+  "entryPrice": 100,
+  "exitPrice": 110,
+  "stopLoss": 90,
+  "takeProfit": 120,
+  "pnl": 10.00,
+  "riskToRewardRatio": 2.00,
+  "reason": "liq sweep",
+  "outcome": "WIN",
+  "executedAt": "2026-10-01T15:00:00Z"
+}
 ```
 
-## Getting Started
+---
+
+## Data Validation Rules
+
+- **Trade Level Logic:**
+  - **`BUY` trades:** Must have `stopLoss < entryPrice` and `takeProfit > entryPrice`.
+  - **`SELL` trades:** Must have `stopLoss > entryPrice` and `takeProfit < entryPrice`.
+  - Invalid configurations return a `400 Bad Request` explicitly identifying the misconfigured price levels.
+- **Field Constraints:**
+  - `direction`: Must be `BUY` or `SELL`.
+  - `session`: Must be `NY`, `ASIA`, or `LONDON`.
+  - `symbol`: Saved in uppercase (max 32 characters).
+  - `reason`: Optional trade notes (max 255 characters). Send `"reason": ""` in a `PATCH` request to clear existing notes.
+  - `executedAt`: Optional ISO timestamp. Defaults to the current server time if omitted.
+
+---
+
+## Quick Start: Live Demo (cURL)
+
+Query trade data directly from your terminal. On Linux or macOS, use `curl` instead of `curl.exe`.
+
+```powershell
+# Health check
+curl.exe https://leja-e0j6.onrender.com/actuator/health
+
+# List all trades
+curl.exe https://leja-e0j6.onrender.com/api/v1/trades
+
+# Fetch a single trade by ID
+curl.exe https://leja-e0j6.onrender.com/api/v1/trades/1
+```
+
+---
+
+## Running Locally
+
+To enable full write features (`POST`, `PATCH`, `DELETE`), clone and launch the project locally against a PostgreSQL instance. Create a database named `leja` on that machine before you start the app. The app creates the tables, but it does not create this database.
+
+```sql
+CREATE DATABASE leja;
+```
 
 ### Prerequisites
 
-- JDK 21
-- Maven 3.9+ (or the included Maven wrapper)
-- Docker, if you want to run the image
-- PostgreSQL locally, or the Neon database
+- **JDK 21**
+- **Maven 3.9+** (or use the included `./mvnw` wrapper)
+- **PostgreSQL** (running locally)
+- **Docker** *(Optional)*
 
-### Local Setup
-
-Clone the repository:
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/tomi-alo/leja.git
 cd leja
 ```
 
-The database URL, database user, database password, and API password come from environment variables. They are not stored in `application.properties`.
+### 2. Set Environment Variables & Start
 
-### Running the Application
+Leja reads database credentials and the API security password from environment variables at startup.
 
-PowerShell:
+**Linux / macOS (Bash):**
+
+```bash
+export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/leja"
+export SPRING_DATASOURCE_USERNAME="postgres"
+export SPRING_DATASOURCE_PASSWORD="your-db-password"
+export LEJA_PASSWORD="your-api-password"
+
+./mvnw spring-boot:run
+```
+
+**Windows (PowerShell):**
 
 ```powershell
 $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/leja"
 $env:SPRING_DATASOURCE_USERNAME = "postgres"
 $env:SPRING_DATASOURCE_PASSWORD = "your-db-password"
 $env:LEJA_PASSWORD = "your-api-password"
+
 .\mvnw.cmd spring-boot:run
 ```
 
-The API is at `http://localhost:8080`. The app does not start when `LEJA_PASSWORD` is missing. The password is read once at startup.
+Local access endpoints:
 
-## Docker
+- **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **List Trades:** [http://localhost:8080/api/v1/trades](http://localhost:8080/api/v1/trades)
+- **Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
 
-Build the image:
+### 3. Create a Trade via cURL
 
-```bash
-docker build -t leja .
+On Linux or macOS, use `curl` instead of `curl.exe`.
+
+```powershell
+curl.exe -u leja:your-api-password -X POST http://localhost:8080/api/v1/trades -H "Content-Type: application/json" -d '{"symbol":"eurusd","direction":"BUY","session":"NY","positionSize":"1","contractSize":"1","entryPrice":"100","exitPrice":"110","stopLoss":"90","takeProfit":"120","reason":"liq sweep"}'
 ```
 
-Run it with the same variables the host would use:
+---
+
+## Docker Setup
+
+Docker is optional. If you decide to run a container instead of `./mvnw spring-boot:run`, build the image and start it against PostgreSQL on your machine:
 
 ```bash
-docker run -p 8080:8080 ^
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/leja ^
-  -e SPRING_DATASOURCE_USERNAME=postgres ^
-  -e SPRING_DATASOURCE_PASSWORD=your-db-password ^
-  -e LEJA_PASSWORD=your-api-password ^
+# Build the Docker image
+docker build -t leja .
+
+# Run container
+docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/leja \
+  -e SPRING_DATASOURCE_USERNAME=postgres \
+  -e SPRING_DATASOURCE_PASSWORD=your-db-password \
+  -e LEJA_PASSWORD=your-api-password \
   leja
 ```
 
-On macOS or Linux, replace `^` with `\`. From inside the container, `host.docker.internal` is the machine running Docker.
+---
 
 ## Testing
 
+Unit and controller test suites are executed without needing a live database connection:
+
 ```bash
+# Linux / macOS
 ./mvnw test
-```
 
-On Windows:
-
-```powershell
+# Windows PowerShell
 .\mvnw.cmd test
 ```
 
-The tests do not need a running database. The controller tests sign in with their own password.
+---
 
-## Workflow
+## CI/CD & Deployment Setup
 
-GitHub Actions is defined in `.github/workflows/ci.yml`. A push or pull request to `main` runs two jobs.
-
-**Test**
-
-- Checks out the repository.
-- Installs JDK 21 (Temurin).
-- Runs `./mvnw test`. A failing test stops the workflow.
-
-**Image**
-
-- Runs only after the tests pass.
-- Builds the Docker image with `docker build -t leja:ci .`.
-- Does not push the image to a registry. Render builds and deploys from the GitHub repository using the `Dockerfile`.
-
-On Render, the service environment is:
-
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://HOST/DATABASE?sslmode=require
-SPRING_DATASOURCE_USERNAME=neondb_owner
-SPRING_DATASOURCE_PASSWORD=the Neon password
-LEJA_PASSWORD=the API password
-```
-
-The URL contains the host and database name only. The Neon username and password stay in the other two variables. The health check path is `/actuator/health`.
+- **Continuous Integration (`.github/workflows/ci.yml`):** Runs automated test builds on push or pull requests targeting `main` using JDK 21 (Temurin).
+- **Continuous Deployment:** Successful CI runs trigger Render to build and deploy directly using the repository's `Dockerfile`.
+- **Cloud Database:** The live production service connects to a managed **Neon PostgreSQL** database.
