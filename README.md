@@ -139,7 +139,7 @@ curl.exe https://leja-e0j6.onrender.com/api/v1/trades/1
 
 ## Running Locally
 
-To enable full write features (`POST`, `PATCH`, `DELETE`), clone and launch the project locally against a PostgreSQL instance. Create a database named `leja` on that machine before you start the app. The app creates the tables. It does not create this database.
+To enable full write features (`POST`, `PATCH`, `DELETE`), clone and launch the project locally against a PostgreSQL instance. Create a database named `leja` on that machine before you start the app. The app creates the tables, but it does not create this database.
 
 ```sql
 CREATE DATABASE leja;
