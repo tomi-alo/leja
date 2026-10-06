@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Service
 public class TradeServiceImpl implements TradeService {
@@ -38,44 +39,18 @@ public class TradeServiceImpl implements TradeService {
         Trade trade = tradeRepository.findById(id)
                 .orElseThrow(() -> new TradeNotFoundException(id));
 
-        if (request.symbol() != null && !request.symbol().isBlank()) {
-            trade.setSymbol(request.symbol());
-        }
-
-        if (request.direction() != null && !request.direction().isBlank()) {
-            trade.setDirection(Direction.valueOf(request.direction().trim().toUpperCase()));
-        }
-
-        if (request.session() != null && !request.session().isBlank()) {
-            trade.setSession(Session.valueOf(request.session().trim().toUpperCase()));
-        }
-
-        if (request.positionSize() != null && !request.positionSize().isBlank()) {
-            trade.setPositionSize(new BigDecimal(request.positionSize().trim()));
-        }
-
-        if (request.contractSize() != null && !request.contractSize().isBlank()) {
-            trade.setContractSize(new BigDecimal(request.contractSize().trim()));
-        }
+        setIfPresent(request.symbol(), trade::setSymbol);
+        setIfPresent(request.direction(), value -> trade.setDirection(Direction.valueOf(value.toUpperCase())));
+        setIfPresent(request.session(), value -> trade.setSession(Session.valueOf(value.toUpperCase())));
+        setIfPresent(request.positionSize(), value -> trade.setPositionSize(new BigDecimal(value)));
+        setIfPresent(request.contractSize(), value -> trade.setContractSize(new BigDecimal(value)));
+        setIfPresent(request.entryPrice(), value -> trade.setEntryPrice(new BigDecimal(value)));
+        setIfPresent(request.exitPrice(), value -> trade.setExitPrice(new BigDecimal(value)));
+        setIfPresent(request.stopLoss(), value -> trade.setStopLoss(new BigDecimal(value)));
+        setIfPresent(request.takeProfit(), value -> trade.setTakeProfit(new BigDecimal(value)));
 
         if (request.reason() != null) {
             trade.setReason(request.reason().isBlank() ? null : request.reason().trim());
-        }
-
-        if (request.entryPrice() != null && !request.entryPrice().isBlank()) {
-            trade.setEntryPrice(new BigDecimal(request.entryPrice().trim()));
-        }
-
-        if (request.exitPrice() != null && !request.exitPrice().isBlank()) {
-            trade.setExitPrice(new BigDecimal(request.exitPrice().trim()));
-        }
-
-        if (request.stopLoss() != null && !request.stopLoss().isBlank()) {
-            trade.setStopLoss(new BigDecimal(request.stopLoss().trim()));
-        }
-
-        if (request.takeProfit() != null && !request.takeProfit().isBlank()) {
-            trade.setTakeProfit(new BigDecimal(request.takeProfit().trim()));
         }
 
         if (request.executedAt() != null) {
@@ -85,6 +60,12 @@ public class TradeServiceImpl implements TradeService {
         trade.checkPriceLevels();
         Trade updatedTrade = tradeRepository.save(trade);
         return tradeMapper.toResponse(updatedTrade);
+    }
+
+    private void setIfPresent(String value, Consumer<String> setter) {
+        if (value != null && !value.isBlank()) {
+            setter.accept(value.trim());
+        }
     }
 
     @Override
