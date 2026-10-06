@@ -39,21 +39,21 @@ public class Trade {
     private BigDecimal contractSize;
 
     @NotNull(message = "Entry price is required")
-    @Column(precision = 19, scale = 8)
+    @Column(precision = 19, scale = 5)
     private BigDecimal entryPrice;
 
     @NotNull(message = "Exit price is required")
-    @Column(precision = 19, scale = 8)
+    @Column(precision = 19, scale = 5)
     private BigDecimal exitPrice;
 
     @NotNull(message = "Stop loss price is required")
     @Positive
-    @Column(precision = 19, scale = 8)
+    @Column(precision = 19, scale = 5)
     private BigDecimal stopLoss;
 
     @NotNull(message = "Take profit price is required")
     @Positive
-    @Column(precision = 19, scale = 8)
+    @Column(precision = 19, scale = 5)
     private BigDecimal takeProfit;
 
     @Enumerated(EnumType.STRING)

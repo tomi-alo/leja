@@ -32,21 +32,21 @@ public record CreateTradeRequest(
         @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,4})?$", message = "Contract size must be a valid positive number")
         String contractSize,
 
-        // Up to 8 decimal places for prices
+        // Up to 5 decimal places for prices
         @NotNull(message = "Entry price is required")
-        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,8})?$", message = "Entry price must be a valid positive number")
+        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,5})?$", message = "Entry price must be a positive number with at most 5 decimal places")
         String entryPrice,
 
         @NotNull(message = "Exit price is required")
-        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,8})?$", message = "Exit price must be a valid positive number")
+        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,5})?$", message = "Exit price must be a positive number with at most 5 decimal places")
         String exitPrice,
 
         @NotNull(message = "Stop loss is required")
-        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,8})?$", message = "Stop loss must be a valid positive number")
+        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,5})?$", message = "Stop loss must be a positive number with at most 5 decimal places")
         String stopLoss,
 
         @NotNull(message = "Take profit is required")
-        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,8})?$", message = "Take profit must be a valid positive number")
+        @Pattern(regexp = "^(?!0(\\.0+)?$)\\d+(\\.\\d{1,5})?$", message = "Take profit must be a positive number with at most 5 decimal places")
         String takeProfit,
 
         @Size(max = 255, message = "Reason must be at most 255 characters")
