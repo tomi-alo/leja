@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #e6e8ec;
+  --panel: #f3f4f6;
+  --line: #c7ccd4;
+  --ink: #1a1f27;
+  --muted: #5c6470;
+  --win: #1a8a5c;
+  --loss: #c4454a;
+  --accent: #2f6f8f;
+  --on-accent: #ffffff;
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #0c0f14;
+  --panel: #161b22;
+  --line: #2a3140;
+  --ink: #e8edf5;
+  --muted: #8b97a8;
+  --win: #3dd68c;
+  --loss: #f07178;
+  --accent: #7aa2f7;
+  --on-accent: #0c0f14;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-win: var(--win);
+  --color-loss: var(--loss);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --animate-rise: rise 0.45s ease both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
