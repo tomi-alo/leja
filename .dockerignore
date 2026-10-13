@@ -1,6 +1,10 @@
-target
 .git
+.github
 .idea
 .vscode
+.cursor
 *.iml
 *.log
+target
+frontend
+README.md

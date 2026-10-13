@@ -16,24 +16,31 @@ function TradeDetail() {
   const [submitting, setSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  function load(tradeId: number) {
-    setError(null)
-    getTrade(tradeId)
+  const tradeId = Number(id)
+  const invalidId = !Number.isInteger(tradeId) || tradeId <= 0
+
+  function load(idToLoad: number) {
+    getTrade(idToLoad)
       .then(setTrade)
       .catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not load trade'))
   }
 
   useEffect(() => {
-    const tradeId = Number(id)
-    if (!Number.isInteger(tradeId) || tradeId <= 0) {
-      setError('Trade not found')
-      return
-    }
+    if (invalidId) return
 
-    setTrade(null)
-    setEditing(false)
-    load(tradeId)
-  }, [id])
+    let cancelled = false
+    getTrade(tradeId)
+      .then((data) => {
+        if (!cancelled) setTrade(data)
+      })
+      .catch((caught) => {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : 'Could not load trade')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [tradeId, invalidId])
 
   function credentials(): Credentials {
     return { username, password }
@@ -49,6 +56,7 @@ function TradeDetail() {
     try {
       await updateTrade(trade.id, draft, credentials())
       setEditing(false)
+      setError(null)
       load(trade.id)
     } finally {
       setSubmitting(false)
@@ -72,10 +80,10 @@ function TradeDetail() {
     }
   }
 
-  if (error) {
+  if (invalidId || error) {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-loss">{error}</p>
+        <p className="text-loss">{error ?? 'Trade not found'}</p>
         <Link to="/journal" className="text-sm text-accent">
           Back to journal
         </Link>
