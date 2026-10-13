@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { createTrade, deleteTrade, updateTrade } from './api'
-import { dayKey, dayLabel, money, pnlColor, price, ratio, when } from './format'
+import { dayKey, dayLabel, money, pnlColor, price, ratio, todayKey, when } from './format'
 import TradeForm from './TradeForm'
 import type { Credentials, Trade, TradeWrite } from './types'
 import { useTrades } from './useTrades'
@@ -18,6 +18,7 @@ function Journal() {
   const [submitting, setSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [symbol, setSymbol] = useState('ALL')
+  const [session, setSession] = useState('ALL')
   const [outcome, setOutcome] = useState('ALL')
 
   const dated = date ? trades.filter((trade) => dayKey(trade.executedAt) === date) : trades
@@ -25,6 +26,7 @@ function Journal() {
   const activeSymbol = symbol !== 'ALL' && symbols.includes(symbol) ? symbol : 'ALL'
   const visible = dated.filter((trade) => {
     if (activeSymbol !== 'ALL' && trade.symbol !== activeSymbol) return false
+    if (session !== 'ALL' && trade.session !== session) return false
     if (outcome !== 'ALL' && trade.outcome !== outcome) return false
     return true
   })
@@ -40,6 +42,7 @@ function Journal() {
   }
 
   function openEdit(trade: Trade) {
+    setPassword('')
     setEditing(trade)
     setFormOpen(true)
     setActionError(null)
@@ -59,6 +62,7 @@ function Journal() {
       }
       setFormOpen(false)
       setEditing(null)
+      setPassword('')
       reload()
     } finally {
       setSubmitting(false)
@@ -75,6 +79,7 @@ function Journal() {
 
     try {
       await deleteTrade(trade.id, credentials())
+      setPassword('')
       reload()
     } catch (caught) {
       setActionError(caught instanceof Error ? caught.message : 'Could not delete trade')
@@ -122,6 +127,15 @@ function Journal() {
           </select>
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
+          Session
+          <select className="rounded-lg border border-line bg-canvas px-3 py-2 text-ink transition-colors duration-300" value={session} onChange={(event) => setSession(event.target.value)}>
+            <option value="ALL">All</option>
+            <option value="NY">NY</option>
+            <option value="ASIA">ASIA</option>
+            <option value="LONDON">LONDON</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-muted">
           Outcome
           <select className="rounded-lg border border-line bg-canvas px-3 py-2 text-ink transition-colors duration-300" value={outcome} onChange={(event) => setOutcome(event.target.value)}>
             <option value="ALL">All</option>
@@ -136,8 +150,9 @@ function Journal() {
 
       {formOpen && (
         <TradeForm
-          key={editing?.id ?? 'new'}
+          key={editing?.id ?? date ?? 'new'}
           trade={editing}
+          defaultDate={date && date <= todayKey() ? date : null}
           submitting={submitting}
           onSubmit={save}
           onCancel={() => setFormOpen(false)}
@@ -191,7 +206,7 @@ function Journal() {
             {visible.length === 0 && (
               <tr>
                 <td colSpan={11} className="px-3 py-4 text-muted">
-                  {date ? `No trades on ${dayLabel(date)}.` : symbol !== 'ALL' || outcome !== 'ALL' ? 'No trades match these filters.' : 'No trades yet.'}
+                  {date ? `No trades on ${dayLabel(date)}.` : symbol !== 'ALL' || session !== 'ALL' || outcome !== 'ALL' ? 'No trades match these filters.' : 'No trades yet.'}
                 </td>
               </tr>
             )}
