@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { dateKey, todayKey } from './format'
 import type { Trade, TradeWrite } from './types'
 
 const inputClass =
@@ -7,14 +8,17 @@ const inputClass =
 
 type TradeFormProps = {
   trade: Trade | null
+  defaultDate?: string | null
   submitting: boolean
   onSubmit: (draft: TradeWrite) => Promise<void>
   onCancel: () => void
 }
 
-function dateInputValue(date: Date) {
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+function initialDate(trade: Trade | null, defaultDate?: string | null) {
+  if (trade) return dateKey(new Date(trade.executedAt))
+  const today = todayKey()
+  if (defaultDate && defaultDate <= today) return defaultDate
+  return today
 }
 
 function dateOnlyToInstant(value: string) {
@@ -22,7 +26,7 @@ function dateOnlyToInstant(value: string) {
   return new Date(year, month - 1, day, 12, 0, 0).toISOString()
 }
 
-function TradeForm({ trade, submitting, onSubmit, onCancel }: TradeFormProps) {
+function TradeForm({ trade, defaultDate, submitting, onSubmit, onCancel }: TradeFormProps) {
   const [symbol, setSymbol] = useState(trade?.symbol ?? '')
   const [direction, setDirection] = useState<string>(trade?.direction ?? 'BUY')
   const [session, setSession] = useState<string>(trade?.session ?? 'NY')
@@ -33,7 +37,7 @@ function TradeForm({ trade, submitting, onSubmit, onCancel }: TradeFormProps) {
   const [stopLoss, setStopLoss] = useState(trade ? String(trade.stopLoss) : '')
   const [takeProfit, setTakeProfit] = useState(trade ? String(trade.takeProfit) : '')
   const [reason, setReason] = useState(trade?.reason ?? '')
-  const [executedAt, setExecutedAt] = useState(trade ? dateInputValue(new Date(trade.executedAt)) : dateInputValue(new Date()))
+  const [executedAt, setExecutedAt] = useState(() => initialDate(trade, defaultDate))
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
@@ -53,10 +57,15 @@ function TradeForm({ trade, submitting, onSubmit, onCancel }: TradeFormProps) {
       reason,
     }
 
-    const today = dateInputValue(new Date())
+    const today = todayKey()
+    if (executedAt > today) {
+      setError('Date cannot be in the future')
+      return
+    }
+
     if (!executedAt || (!trade && executedAt === today)) {
       draft.executedAt = new Date().toISOString()
-    } else if (trade && executedAt === dateInputValue(new Date(trade.executedAt))) {
+    } else if (trade && executedAt === dateKey(new Date(trade.executedAt))) {
       draft.executedAt = trade.executedAt
     } else {
       draft.executedAt = dateOnlyToInstant(executedAt)
@@ -94,7 +103,18 @@ function TradeForm({ trade, submitting, onSubmit, onCancel }: TradeFormProps) {
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
           Date
-          <input className={inputClass} type="date" value={executedAt} onChange={(event) => setExecutedAt(event.target.value)} required />
+          <input
+            className={inputClass}
+            type="date"
+            max={todayKey()}
+            value={executedAt}
+            onChange={(event) => {
+              const next = event.target.value
+              const today = todayKey()
+              setExecutedAt(next > today ? today : next)
+            }}
+            required
+          />
           <span className="text-xs">Today saves the current time. Another day saves the date only.</span>
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">

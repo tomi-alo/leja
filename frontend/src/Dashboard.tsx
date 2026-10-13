@@ -10,6 +10,7 @@ function Dashboard() {
 
   const sessions = statsBySession(trades)
   const symbols = statsBySymbol(trades)
+  const sessionPeak = Math.max(...sessions.map((row) => Math.abs(row.pnl)), 0)
   const stats = [
     { label: 'Total PnL (USD)', value: money(totalPnl(trades)), color: pnlColor(totalPnl(trades)) },
     { label: 'Avg PnL (USD)', value: money(averagePnl(trades)), color: pnlColor(averagePnl(trades)) },
@@ -50,8 +51,7 @@ function Dashboard() {
             {trades.length === 0 && <li className="px-4 py-3 text-muted">No trades yet.</li>}
           </ul>
         </article>
-        <article className="overflow-hidden rounded-2xl border border-line bg-panel shadow-sm transition-colors duration-300">
-          <h2 className="border-b border-line px-4 py-3 text-sm font-medium text-muted">By session</h2>
+        <article className="flex flex-col overflow-hidden rounded-2xl border border-line bg-panel shadow-sm transition-colors duration-300">
           <table className="w-full text-left text-sm">
             <thead className="text-muted">
               <tr>
@@ -72,10 +72,26 @@ function Dashboard() {
               ))}
             </tbody>
           </table>
+          <div className="flex flex-1 flex-col justify-evenly gap-3 border-t border-line px-4 py-4">
+            {sessions.map((row) => (
+              <div
+                key={`${row.session}-bar`}
+                aria-label={`${row.session} PnL ${money(row.pnl)}`}
+                className="grid grid-cols-[4.25rem_1fr] items-center gap-3"
+              >
+                <span className="text-xs text-muted">{row.session}</span>
+                <div className="h-2.5 overflow-hidden rounded-full bg-canvas">
+                  <div
+                    className={`h-full rounded-full ${row.pnl > 0 ? 'bg-win' : row.pnl < 0 ? 'bg-loss' : 'bg-line'}`}
+                    style={{ width: sessionPeak === 0 ? '0%' : `${Math.max((Math.abs(row.pnl) / sessionPeak) * 100, row.pnl === 0 ? 0 : 8)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </article>
       </section>
       <section className="overflow-hidden rounded-2xl border border-line bg-panel shadow-sm transition-colors duration-300">
-        <h2 className="border-b border-line px-4 py-3 text-sm font-medium text-muted">By symbol</h2>
         {symbols.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted">No trades yet.</p>
         ) : (

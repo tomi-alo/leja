@@ -56,6 +56,7 @@ function TradeDetail() {
     try {
       await updateTrade(trade.id, draft, credentials())
       setEditing(false)
+      setPassword('')
       setError(null)
       load(trade.id)
     } finally {
@@ -123,7 +124,16 @@ function TradeDetail() {
           <p className="text-sm text-muted">Trade {trade.id}</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={() => setEditing((open) => !open)} className="rounded-full border border-line px-4 py-2 text-sm text-accent">
+          <button
+            type="button"
+            onClick={() => {
+              setEditing((open) => {
+                if (!open) setPassword('')
+                return !open
+              })
+            }}
+            className="rounded-full border border-line px-4 py-2 text-sm text-accent"
+          >
             {editing ? 'Close' : 'Edit'}
           </button>
           <button type="button" onClick={remove} className="rounded-full border border-line px-4 py-2 text-sm text-loss">
