@@ -9,9 +9,14 @@ const inputClass =
 type TradeFormProps = {
   trade: Trade | null
   defaultDate?: string | null
+  knownSymbols?: string[]
   submitting: boolean
   onSubmit: (draft: TradeWrite) => Promise<void>
   onCancel: () => void
+}
+
+function normalizeSymbol(value: string) {
+  return value.replace(/\s+/g, '').toUpperCase()
 }
 
 function initialDate(trade: Trade | null, defaultDate?: string | null) {
@@ -26,8 +31,13 @@ function dateOnlyToInstant(value: string) {
   return new Date(year, month - 1, day, 12, 0, 0).toISOString()
 }
 
-function TradeForm({ trade, defaultDate, submitting, onSubmit, onCancel }: TradeFormProps) {
-  const [symbol, setSymbol] = useState(trade?.symbol ?? '')
+const NEW_SYMBOL = '__new__'
+
+function TradeForm({ trade, defaultDate, knownSymbols = [], submitting, onSubmit, onCancel }: TradeFormProps) {
+  const currentSymbol = normalizeSymbol(trade?.symbol ?? '')
+  const symbolOptions = [...new Set([...knownSymbols, currentSymbol].filter(Boolean))].sort()
+  const [symbolChoice, setSymbolChoice] = useState(currentSymbol)
+  const [customSymbol, setCustomSymbol] = useState('')
   const [direction, setDirection] = useState<string>(trade?.direction ?? 'BUY')
   const [session, setSession] = useState<string>(trade?.session ?? 'NY')
   const [positionSize, setPositionSize] = useState(trade ? String(trade.positionSize) : '')
@@ -45,7 +55,7 @@ function TradeForm({ trade, defaultDate, submitting, onSubmit, onCancel }: Trade
     setError(null)
 
     const draft: TradeWrite = {
-      symbol,
+      symbol: symbolChoice === NEW_SYMBOL ? normalizeSymbol(customSymbol) : symbolChoice,
       direction,
       session,
       positionSize,
@@ -84,8 +94,35 @@ function TradeForm({ trade, defaultDate, submitting, onSubmit, onCancel }: Trade
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm text-muted">
           Symbol
-          <input className={inputClass} value={symbol} onChange={(event) => setSymbol(event.target.value)} required />
+          <select
+            className={inputClass}
+            value={symbolChoice}
+            onChange={(event) => setSymbolChoice(event.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Select
+            </option>
+            {symbolOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+            <option value={NEW_SYMBOL}>New symbol</option>
+          </select>
         </label>
+        {symbolChoice === NEW_SYMBOL && (
+          <label className="flex flex-col gap-1 text-sm text-muted">
+            New symbol
+            <input
+              className={inputClass}
+              value={customSymbol}
+              onChange={(event) => setCustomSymbol(normalizeSymbol(event.target.value))}
+              autoComplete="off"
+              required
+            />
+          </label>
+        )}
         <label className="flex flex-col gap-1 text-sm text-muted">
           Direction
           <select className={inputClass} value={direction} onChange={(event) => setDirection(event.target.value)}>

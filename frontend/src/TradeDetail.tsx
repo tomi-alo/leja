@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { deleteTrade, getTrade, updateTrade } from './api'
+import { useTrades } from './useTrades'
 import { money, pnlColor, price, ratio, when } from './format'
 import TradeForm from './TradeForm'
 import type { Credentials, Trade, TradeWrite } from './types'
@@ -15,6 +16,7 @@ function TradeDetail() {
   const [editing, setEditing] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const { trades } = useTrades()
 
   const tradeId = Number(id)
   const invalidId = !Number.isInteger(tradeId) || tradeId <= 0
@@ -145,7 +147,7 @@ function TradeDetail() {
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-panel p-4 shadow-sm">
         <label className="flex flex-col gap-1 text-sm text-muted">
           Username
-          <input className="rounded-lg border border-line bg-canvas px-3 py-2 text-ink" value={username} onChange={(event) => setUsername(event.target.value)} />
+          <input className="rounded-lg border border-line bg-canvas px-3 py-2 text-ink" type="password" autoComplete="off" value={username} onChange={(event) => setUsername(event.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
           API password
@@ -161,6 +163,7 @@ function TradeDetail() {
           key={trade.id}
           trade={trade}
           submitting={submitting}
+          knownSymbols={[...new Set(trades.map((row) => row.symbol))].sort()}
           onSubmit={save}
           onCancel={() => setEditing(false)}
         />

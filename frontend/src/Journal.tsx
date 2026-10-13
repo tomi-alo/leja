@@ -108,7 +108,7 @@ function Journal() {
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-panel p-4 shadow-sm transition-colors duration-300">
         <label className="flex flex-col gap-1 text-sm text-muted">
           Username
-          <input className="rounded-lg border border-line bg-canvas px-3 py-2 text-ink transition-colors duration-300" value={username} onChange={(event) => setUsername(event.target.value)} />
+          <input className="rounded-lg border border-line bg-canvas px-3 py-2 text-ink transition-colors duration-300" type="password" autoComplete="off" value={username} onChange={(event) => setUsername(event.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
           API password
@@ -153,6 +153,7 @@ function Journal() {
           key={editing?.id ?? date ?? 'new'}
           trade={editing}
           defaultDate={date && date <= todayKey() ? date : null}
+          knownSymbols={[...new Set(trades.map((row) => row.symbol))].sort()}
           submitting={submitting}
           onSubmit={save}
           onCancel={() => setFormOpen(false)}

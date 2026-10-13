@@ -19,6 +19,13 @@ class TradeTest {
     }
 
     @Test
+    void constructor_shouldStripInternalSpacesFromSymbol() {
+        Trade trade = buy("eur usd", "110", "90", "120");
+
+        assertEquals("EURUSD", trade.getSymbol());
+    }
+
+    @Test
     void setSymbol_shouldSanitizeSymbol() {
         Trade trade = buy("EURUSD", "110", "90", "120");
 

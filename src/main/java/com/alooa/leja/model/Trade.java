@@ -83,7 +83,7 @@ public class Trade {
     }
 
     private static String sanitizeSymbol(String symbol) {
-        return symbol != null ? symbol.trim().toUpperCase() : null;
+        return symbol != null ? symbol.replaceAll("\\s+", "").toUpperCase() : null;
     }
 
     public Long getId() {return this.id;}
