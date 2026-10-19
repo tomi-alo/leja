@@ -1,70 +1,71 @@
-# Leja
+# 📈 LEJA
 
-**Leja** is a REST API for a trading journal. When a trade position is closed, Leja automatically calculates the Profit & Loss (PnL), risk-to-reward ratio, and outcome (`WIN`, `LOSS`, or `BREAK EVEN`).
+**LEJA** is a streamlined trading journal app designed to take the manual math out of tracking closed trades. Once you input a trade, Leja automatically calculates your total Profit & Loss (PnL), risk-to-reward ratio, and outcome status (`WIN`, `LOSS`, or `BREAK EVEN`).
 
 ---
 
-## API & Endpoints
+## 🌐 Live Demo
 
-Explore and interact with the endpoints using either the live demo server or your own local instance:
+* **Web Application:** [lejafrontend.vercel.app](https://lejafrontend.vercel.app/)
+* **API Base URL:** `https://leja-e0j6.onrender.com`
+* **Interactive API Docs:** [Swagger UI (Live Demo)](https://leja-e0j6.onrender.com/swagger-ui/index.html)
 
-- **Live Base URL:** `https://leja-e0j6.onrender.com`
-- **Local Base URL:** `http://localhost:8080`
-- **Interactive Documentation:** [Swagger UI (Live Demo)](https://leja-e0j6.onrender.com/swagger-ui/index.html)
+> 💡 **A Quick Note on Cold Starts:**  
+> The backend runs on Render’s free tier and goes to sleep when idle. The very first request might take up to two minutes to wake up the server, during which the frontend may temporarily appear empty. Give it a quick refresh once the backend responds!
 
-### Endpoint Summary
+---
 
-All trade routes live under `/api/v1/trades`.
+## 💡 What You Can Do in the App
 
-| Method | Endpoint | Live Server Access | Description |
+* **Dashboard (`/`):** A high-level overview of your trading performance, including total PnL, average PnL, win rate, total trade count, and average risk-to-reward. You’ll also find your recent trades alongside interactive session breakdown charts and performance by symbol.
+* **Journal (`/journal`):** A list of all logged trades with filters for symbol, trading session, and outcome. You can add, edit, or delete trades from here, and review your trading notes (`reason`). Clicking a date in the calendar auto-filters the journal.
+* **Calendar (`/calendar`):** A month-at-a-glance view showing daily PnL totals and the number of closed trades for each day.
+* **Trade Detail (`/journal/:id`):** Focuses on an individual trade with full edit and delete capabilities.
+
+### Public vs. Authenticated Access
+Anyone can browse public trades without logging in. Adding, updating, or deleting trades requires HTTP Basic Authentication. Without valid credentials on the live demo, nothing you enter will be saved, and any `POST`, `PATCH`, or `DELETE` request will return a `401 Unauthorized` response.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+| --- | --- |
+| **Frontend** | React 19, TypeScript, Tailwind CSS, React Router, Vite |
+| **Backend** | Java 21, Spring Boot 3.3.5, Maven |
+| **Database** | PostgreSQL (Neon in production) |
+| **Hosting** | Vercel (Frontend), Render (API), Neon (Database) |
+| **CI Pipeline** | GitHub Actions (API unit testing, frontend linting/building, and Docker build verification) |
+
+---
+
+## 📡 API & Endpoints
+
+All trade resources live under `/api/v1/trades`.
+
+| Method | Endpoint | Live Access Level | Description |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/trades` | **Available** | Retrieves all trades. |
-| `GET` | `/api/v1/trades/{id}` | **Available** | Retrieves a specific trade by ID (returns `404` if not found). |
-| `GET` | `/actuator/health` | **Available** | Returns application health status. |
-| `POST` | `/api/v1/trades` | **Protected** (401 on Live) | Creates a new trade (returns `201`). |
-| `PATCH` | `/api/v1/trades/{id}` | **Protected** (401 on Live) | Updates specified trade fields (returns `200`). |
-| `DELETE` | `/api/v1/trades/{id}` | **Protected** (401 on Live) | Deletes a trade (returns `204`, or `404` if not found). |
+| `GET` | `/api/v1/trades` | **Public** | Retrieves all trades. |
+| `GET` | `/api/v1/trades/{id}` | **Public** | Retrieves a single trade (returns `404` if not found). |
+| `GET` | `/actuator/health` | **Public** | Returns application health status. |
+| `POST` | `/api/v1/trades` | **Protected** (`401` on Live) | Creates a new trade record (`201`). |
+| `PATCH` | `/api/v1/trades/{id}` | **Protected** (`401` on Live) | Updates specific fields on an existing trade (`200`). |
+| `DELETE` | `/api/v1/trades/{id}` | **Protected** (`401` on Live) | Deletes a trade (`204`, or `404` if not found). |
 
-> **Note:** `PUT /api/v1/trades/{id}` is not supported (`405 Method Not Allowed`). Use `PATCH` for updates.
+> `PUT` is intentionally not supported. Use `PATCH` for partial updates.
 
----
+Try the live API from your terminal (Windows PowerShell users can use `curl.exe` instead of `curl`):
 
-## Live Demo Access Restrictions
+```bash
+curl https://leja-e0j6.onrender.com/actuator/health
+curl https://leja-e0j6.onrender.com/api/v1/trades
+curl https://leja-e0j6.onrender.com/api/v1/trades/1
+```
 
-On the **Live Demo**, public access is strictly **read-only**.
+<details>
+<summary><b>Example request & response (<code>POST /api/v1/trades</code>)</b></summary>
 
-### What you can use on the Live Server:
-
-- `GET /api/v1/trades` (List trades)
-- `GET /api/v1/trades/{id}` (Fetch individual trade)
-- `GET /actuator/health` (Health check)
-- **Swagger UI** (Browsing documentation)
-
-### Why write actions (`POST`, `PATCH`, `DELETE`) are disabled on the Live Server:
-
-Write operations are secured with **HTTP Basic Authentication**. The required password is stored exclusively in the host environment variables (Render) to keep the live demonstration database clean, consistent, and protected from unauthorized modifications or spam.
-
-Executing a `POST`, `PATCH`, or `DELETE` request against the live server (via Swagger UI, cURL, or Postman) will intentionally return a `401 Unauthorized` status. To create, update, or delete trades, you can run your own local instance.
-
----
-
-## Testing & Interacting with Postman
-
-You can easily interact with the API using tools like **Postman** or **cURL**.
-
-### Testing Local Write Operations (`POST`)
-
-1. Set the request method to **`POST`**.
-2. URL: `http://localhost:8080/api/v1/trades`
-3. Under the **Authorization** tab:
-   - **Type:** Basic Auth
-   - **Username:** `leja`
-   - **Password:** *(The value configured in your local `LEJA_PASSWORD` variable)*
-4. Under the **Headers** tab:
-   - **Key:** `Content-Type`, **Value:** `application/json`
-5. Under the **Body** tab, select **raw** and choose **JSON**.
-
-### Example Request Payload (`POST /api/v1/trades`)
+Send numeric values (prices and sizes) as strings. Sizes accept up to 4 decimal places, while prices support up to 5.
 
 ```json
 {
@@ -81,7 +82,7 @@ You can easily interact with the API using tools like **Postman** or **cURL**.
 }
 ```
 
-### Example Server Response (`201 Created`)
+Response (`201 Created`):
 
 ```json
 {
@@ -103,69 +104,57 @@ You can easily interact with the API using tools like **Postman** or **cURL**.
 }
 ```
 
----
+</details>
 
-## Data Validation Rules
+<details>
+<summary><b>Validation rules & how calculations work</b></summary>
 
-- **Trade Level Logic:**
-  - **`BUY` trades:** Must have `stopLoss < entryPrice` and `takeProfit > entryPrice`.
-  - **`SELL` trades:** Must have `stopLoss > entryPrice` and `takeProfit < entryPrice`.
-  - Invalid configurations return a `400 Bad Request` explicitly identifying the misconfigured price levels.
-- **Field Constraints:**
-  - `direction`: Must be `BUY` or `SELL`.
-  - `session`: Must be `NY`, `ASIA`, or `LONDON`.
-  - `symbol`: Saved in uppercase (max 32 characters).
-  - `reason`: Optional trade notes (max 255 characters). Send `"reason": ""` in a `PATCH` request to clear existing notes.
-  - `executedAt`: Optional ISO timestamp. Defaults to the current server time if omitted.
+**Trade levels:**
+* For **`BUY`** orders, `stopLoss` must sit below `entryPrice`, and `takeProfit` must sit above `entryPrice`.
+* For **`SELL`** orders, `stopLoss` must sit above `entryPrice`, and `takeProfit` must sit below `entryPrice`.
+* Invalid level configurations return a `400 Bad Request` naming the problematic price.
 
----
+**Field formatting:**
+* `direction`: Accepts `BUY` or `SELL` (case-insensitive, normalized to uppercase).
+* `session`: Accepts `NY`, `ASIA`, or `LONDON` (case-insensitive, normalized to uppercase).
+* `symbol`: Required, max 32 characters. All spaces are stripped and converted to uppercase (e.g., `eur usd` becomes `EURUSD`).
+* `reason`: Optional, up to 255 characters. Sending `"reason": ""` in a `PATCH` request clears existing notes.
+* `executedAt`: Optional ISO-8601 timestamp; defaults to current server time if omitted.
+* `exitPrice`: Required upon creation because Leja explicitly tracks closed trades.
 
-## Quick Start: Live Demo (cURL)
+**Calculations:**
+* **PnL:** `(exitPrice - entryPrice) × positionSize × contractSize`, with the sign inverted for `SELL` trades and rounded to 2 decimal places.
+* **Risk-to-Reward Ratio:** `|takeProfit - entryPrice| / |entryPrice - stopLoss|`, rounded to 2 decimal places.
+* **Outcome:** `WIN` when PnL > 0, `LOSS` when PnL < 0, `BREAK EVEN` when PnL = 0.
 
-Query trade data directly from your terminal. On Linux or macOS, use `curl` instead of `curl.exe`.
-
-```powershell
-# Health check
-curl.exe https://leja-e0j6.onrender.com/actuator/health
-
-# List all trades
-curl.exe https://leja-e0j6.onrender.com/api/v1/trades
-
-# Fetch a single trade by ID
-curl.exe https://leja-e0j6.onrender.com/api/v1/trades/1
-```
+</details>
 
 ---
 
-## Running Locally
+## ⚙️ Running Locally
 
-To enable full write features (`POST`, `PATCH`, `DELETE`), clone and launch the project locally against a PostgreSQL instance. Create a database named `leja` on that machine before you start the app. The app creates the tables, but it does not create this database.
+Running locally gives you full write access (`POST`, `PATCH`, `DELETE`).
+
+**Prerequisites:** JDK 21, Maven 3.9+ (or the included `./mvnw` wrapper), PostgreSQL, and Node.js 24.
+
+### 1. Create the database
 
 ```sql
 CREATE DATABASE leja;
 ```
 
-### Prerequisites
+Hibernate updates the schema automatically via `ddl-auto=update`, but it will not create the database itself.
 
-- **JDK 21**
-- **Maven 3.9+** (or use the included `./mvnw` wrapper)
-- **PostgreSQL** (running locally)
-- **Docker** *(Optional)*
+### 2. Run the backend
 
-### 1. Clone the Repository
+The API expects a non-blank `LEJA_PASSWORD` to launch successfully.
+
+**On Linux / macOS:**
 
 ```bash
 git clone https://github.com/tomi-alo/leja.git
 cd leja
-```
 
-### 2. Set Environment Variables & Start
-
-Leja reads database credentials and the API security password from environment variables at startup.
-
-**Linux / macOS (Bash):**
-
-```bash
 export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/leja"
 export SPRING_DATASOURCE_USERNAME="postgres"
 export SPRING_DATASOURCE_PASSWORD="your-db-password"
@@ -174,9 +163,12 @@ export LEJA_PASSWORD="your-api-password"
 ./mvnw spring-boot:run
 ```
 
-**Windows (PowerShell):**
+**On Windows (PowerShell):**
 
 ```powershell
+git clone https://github.com/tomi-alo/leja.git
+cd leja
+
 $env:SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/leja"
 $env:SPRING_DATASOURCE_USERNAME = "postgres"
 $env:SPRING_DATASOURCE_PASSWORD = "your-db-password"
@@ -185,57 +177,40 @@ $env:LEJA_PASSWORD = "your-api-password"
 .\mvnw.cmd spring-boot:run
 ```
 
-Local access endpoints:
+Swagger UI will be at [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
 
-- **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- **List Trades:** [http://localhost:8080/api/v1/trades](http://localhost:8080/api/v1/trades)
-- **Health Check:** [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health)
-
-### 3. Create a Trade via cURL
-
-On Linux or macOS, use `curl` instead of `curl.exe`.
-
-```powershell
-curl.exe -u leja:your-api-password -X POST http://localhost:8080/api/v1/trades -H "Content-Type: application/json" -d '{"symbol":"eurusd","direction":"BUY","session":"NY","positionSize":"1","contractSize":"1","entryPrice":"100","exitPrice":"110","stopLoss":"90","takeProfit":"120","reason":"liq sweep"}'
-```
-
----
-
-## Docker Setup
-
-Docker is optional. If you decide to run a container instead of `./mvnw spring-boot:run`, build the image and start it against PostgreSQL on your machine:
+### 3. Run the frontend
 
 ```bash
-# Build the Docker image
-docker build -t leja .
-
-# Run container
-docker run -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/leja \
-  -e SPRING_DATASOURCE_USERNAME=postgres \
-  -e SPRING_DATASOURCE_PASSWORD=your-db-password \
-  -e LEJA_PASSWORD=your-api-password \
-  leja
+cd frontend
+npm ci
+npm run dev
 ```
 
----
+Vite starts the dev server at `http://localhost:5173` and automatically proxies `/api` requests to your backend at `http://localhost:8080`.
 
-## Testing
-
-Unit and controller test suites are executed without needing a live database connection:
+### 4. Create a trade (optional)
 
 ```bash
-# Linux / macOS
-./mvnw test
-
-# Windows PowerShell
-.\mvnw.cmd test
+curl -u leja:your-api-password -X POST http://localhost:8080/api/v1/trades \
+  -H "Content-Type: application/json" \
+  -d '{"symbol":"eurusd","direction":"BUY","session":"NY","positionSize":"1","contractSize":"1","entryPrice":"100","exitPrice":"110","stopLoss":"90","takeProfit":"120","reason":"liq sweep"}'
 ```
 
 ---
 
-## CI/CD & Deployment Setup
+## 🧪 Tests & CI
 
-- **Continuous Integration (`.github/workflows/ci.yml`):** Runs automated test builds on push or pull requests targeting `main` using JDK 21 (Temurin).
-- **Continuous Deployment:** Successful CI runs trigger Render to build and deploy directly using the repository's `Dockerfile`.
-- **Cloud Database:** The live production service connects to a managed **Neon PostgreSQL** database.
+```bash
+# Backend tests (no database needed)
+./mvnw test        # Linux/macOS
+.\mvnw.cmd test    # Windows
+
+# Frontend checks
+cd frontend
+npm ci
+npm run lint
+npm run build
+```
+
+On every push or pull request to `main`, GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs the backend tests on JDK 21, lints and builds the frontend, then builds a test Docker image (`leja:ci`) once both pass.
